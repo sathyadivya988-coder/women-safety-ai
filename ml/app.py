@@ -1,58 +1,63 @@
 from flask import Flask, request, jsonify
-import joblib
-import pandas as pd
+import pickle
 
 app = Flask(__name__)
 
-model = joblib.load("model.pkl")
-
-def get_safety_score(murder, rape, kidnapping):
-    total = murder + rape + kidnapping
-    score = max(0, 100 - total)
-    return score
-
-def get_advice(risk):
-    if risk == "High":
-        return "Avoid traveling alone at night and use safe transport."
-    elif risk == "Medium":
-        return "Stay alert and prefer well-lit public areas."
-    else:
-        return "Area appears relatively safe but remain cautious."
+# Load trained model
+model = pickle.load(open("model.pkl", "rb"))
 
 @app.route("/")
 def home():
-    return "Women Safety AI Model Running"
+    return "Women Safety AI API Running"
 
 @app.route("/predict", methods=["POST"])
 def predict():
 
     data = request.get_json()
 
-    state = data["STATE_UT"]
-    district = data["DISTRICT"]
-    year = data["YEAR"]
-    murder = data["MURDER"]
-    rape = data["RAPE"]
-    kidnapping = data["KIDNAPPING"]
+    features = [[
+        data["STATE_UT"],
+        data["DISTRICT"],
+        data["YEAR"],
+        data["MURDER"],
+        data["RAPE"],
+        data["KIDNAPPING"],
+        data["ROBBERY"],
+        data["BURGLARY"],
+        data["THEFT"],
+        data["RIOTS"],
+        data["ASSAULT"],
+        data["CRUELTY"]
+    ]]
 
-    input_data = pd.DataFrame([[state, district, year, murder, rape, kidnapping]],
-    columns=[
-        "STATE/UT",
-        "DISTRICT",
-        "YEAR",
-        "MURDER",
-        "RAPE",
-        "KIDNAPPING & ABDUCTION"
-    ])
+    prediction = model.predict(features)[0]
 
-    prediction = model.predict(input_data)[0]
+    if prediction == 0:
+        risk = "Low"
+        advice = "Area appears relatively safe but remain cautious."
+    elif prediction == 1:
+        risk = "Medium"
+        advice = "Stay alert and prefer well-lit public areas."
+    else:
+        risk = "High"
+        advice = "Avoid isolated areas and travel with companions."
 
-    safety_score = get_safety_score(murder, rape, kidnapping)
+    total_crime = (
+        data["MURDER"] +
+        data["RAPE"] +
+        data["KIDNAPPING"] +
+        data["ROBBERY"] +
+        data["BURGLARY"] +
+        data["THEFT"] +
+        data["RIOTS"] +
+        data["ASSAULT"] +
+        data["CRUELTY"]
+    )
 
-    advice = get_advice(prediction)
+    safety_score = max(0, 100 - total_crime)
 
     return jsonify({
-        "Risk Level": prediction,
+        "Risk Level": risk,
         "Safety Score": safety_score,
         "Advice": advice
     })
