@@ -2,46 +2,57 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 import joblib
 
 # Load dataset
-data = pd.read_csv("crime_data.csv")
+data = pd.read_csv("crime_india.csv")
 
 # Select useful columns
-data = data[["City","Crime Domain","Weapon Used","Victim Gender"]]
+data = data[["STATE/UT","DISTRICT","YEAR","MURDER","RAPE","KIDNAPPING & ABDUCTION"]]
 
-# Create Risk column
-def get_risk(domain):
-    if domain == "Violent Crime":
+# Create Risk column based on crime severity
+def get_risk(row):
+    total = row["MURDER"] + row["RAPE"] + row["KIDNAPPING & ABDUCTION"]
+
+    if total > 100:
         return "High"
-    elif domain == "Other Crime":
+    elif total > 30:
         return "Medium"
     else:
         return "Low"
 
-data["Risk"] = data["Crime Domain"].apply(get_risk)
+data["Risk"] = data.apply(get_risk, axis=1)
 
-# Encode text columns
-le_city = LabelEncoder()
-le_weapon = LabelEncoder()
-le_gender = LabelEncoder()
+# Encode categorical columns
+le_state = LabelEncoder()
+le_district = LabelEncoder()
 
-data["City"] = le_city.fit_transform(data["City"])
-data["Weapon Used"] = le_weapon.fit_transform(data["Weapon Used"])
-data["Victim Gender"] = le_gender.fit_transform(data["Victim Gender"])
+data["STATE/UT"] = le_state.fit_transform(data["STATE/UT"])
+data["DISTRICT"] = le_district.fit_transform(data["DISTRICT"])
 
 # Features and target
-X = data[["City","Weapon Used","Victim Gender"]]
+X = data[["STATE/UT","DISTRICT","YEAR","MURDER","RAPE","KIDNAPPING & ABDUCTION"]]
 y = data["Risk"]
 
-# Split dataset
-X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2)
+# Train test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 # Train model
-model = RandomForestClassifier()
-model.fit(X_train,y_train)
+model = RandomForestClassifier(n_estimators=200, random_state=42)
+model.fit(X_train, y_train)
+
+# Predict
+y_pred = model.predict(X_test)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print("Model Accuracy:", accuracy)
 
 # Save model
-joblib.dump(model,"model.pkl")
+joblib.dump(model, "model.pkl")
 
 print("✅ Model trained successfully")
+print("📦 Model saved as model.pkl")

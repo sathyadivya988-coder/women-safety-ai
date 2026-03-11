@@ -1,22 +1,41 @@
-from flask import Flask,request,jsonify
+from flask import Flask, request, jsonify
 import joblib
+import pandas as pd
 
+# Initialize Flask
 app = Flask(__name__)
 
+# Load trained model
 model = joblib.load("model.pkl")
 
 @app.route("/")
 def home():
-    return "Women Safety AI API is running"
+    return "Women Safety AI Model Running"
 
-@app.route("/predict",methods=["GET"])
+@app.route("/predict", methods=["POST"])
 def predict():
+    
+    data = request.get_json()
 
-    city = int(request.args.get("city"))
-    weapon = int(request.args.get("weapon"))
-    gender = int(request.args.get("gender"))
+    state = data["STATE_UT"]
+    district = data["DISTRICT"]
+    year = data["YEAR"]
+    murder = data["MURDER"]
+    rape = data["RAPE"]
+    kidnapping = data["KIDNAPPING"]
 
-    prediction = model.predict([[city,weapon,gender]])
+    # Create dataframe for prediction
+    input_data = pd.DataFrame([[state, district, year, murder, rape, kidnapping]],
+    columns=[
+        "STATE/UT",
+        "DISTRICT",
+        "YEAR",
+        "MURDER",
+        "RAPE",
+        "KIDNAPPING & ABDUCTION"
+    ])
+
+    prediction = model.predict(input_data)
 
     return jsonify({
         "Risk Level": prediction[0]
