@@ -34,12 +34,11 @@ def trigger_sos_alert(request: SOSAlertRequest, db: Session = Depends(get_db)):
     db.add(new_prediction)
     
     # 3. Store SOS Alert
-    pt_geom = f"SRID=4326;POINT({request.longitude} {request.latitude})"
     new_alert = SOSAlert(
         user_id=request.user_id,
         latitude=request.latitude,
         longitude=request.longitude,
-        location=pt_geom
+        risk_score=risk_data['risk_score']
     )
     db.add(new_alert)
     db.commit()

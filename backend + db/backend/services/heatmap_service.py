@@ -4,19 +4,15 @@ from models.crime_data import CrimeData
 
 def calculate_crime_density(db: Session, lat: float, lon: float, radius_km: float = 1.0) -> int:
     """
-    Calculate crime density around a given location using PostGIS spatial functions.
-    Returns the number of crimes within the specified radius (in kilometers).
+    Calculate crime density around a given location using standard lat/lon comparison.
+    (Approximated bounding box for SQLite compatibility)
     """
-    # ST_DWithin checks if two geometries are within a given distance in meters
-    # The Geography type uses meters for distance by default
-    radius_meters = radius_km * 1000
+    # approx 1km in degrees
+    delta = radius_km / 111.0 
     
-    # Create the point geometry for the given lat/lon
-    point_geom = f"SRID=4326;POINT({lon} {lat})"
-    
-    # Query counting crimes within the radius
     count = db.query(func.count(CrimeData.id)).filter(
-        func.ST_DWithin(CrimeData.location, point_geom, radius_meters)
+        CrimeData.latitude.between(lat - delta, lat + delta),
+        CrimeData.longitude.between(lon - delta, lon + delta)
     ).scalar()
     
     return count or 0

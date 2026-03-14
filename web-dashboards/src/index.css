@@ -1,17 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --primary: #FF2B51;
-  --secondary: #2B2D42;
-  --background: #F8F9FA;
-  --text-main: #1D1E2C;
+  /* Dark Theme Palette */
+  --primary: 250 84% 54%; /* Neon Indigo */
+  --accent: 345 100% 58%; /* Rose SOS */
+  --bg: 222 47% 4%;      /* Deep Slate Black */
+  --card: 222 47% 8%;     /* Dark Card Slate */
+  --border: 217 33% 17%;
+  --text: 210 40% 98%;    /* White/Blue-ish */
+  --text-muted: 215 16% 57%;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--text-main);
-  font-family: 'Inter', sans-serif;
+  background-color: hsl(var(--bg));
+  color: hsl(var(--text));
+  font-family: 'Outfit', sans-serif;
   margin: 0;
+  overflow-x: hidden;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-slate-900/60 backdrop-blur-2xl border border-slate-800 shadow-2xl;
+  }
+  
+  .neon-border {
+    @apply border-2 border-indigo-500/40 shadow-[0_0_20px_rgba(79,70,229,0.25)];
+  }
+
+  .sos-glow {
+    @apply shadow-[0_0_50px_rgba(255,43,81,0.6)] animate-pulse;
+  }
+}
+
+/* Custom Scrollbar for Dark Theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--bg));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--text-muted));
 }

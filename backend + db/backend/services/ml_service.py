@@ -56,7 +56,7 @@ def predict_risk(db: Session, lat: float, lon: float) -> dict:
     current_time = datetime.now()
     hour = current_time.hour
     
-    # 2. Get local crime density using PostGIS
+    # 2. Get local crime density
     density = calculate_crime_density(db, lat=lat, lon=lon, radius_km=1.5)
     
     # 3. Create feature dataframe

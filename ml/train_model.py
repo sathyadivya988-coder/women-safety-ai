@@ -82,8 +82,10 @@ accuracy = accuracy_score(y_test, pred)
 
 print("Model Accuracy:", accuracy)
 
-# Save model
+# Save model and encoders
 pickle.dump(model, open("model.pkl", "wb"))
+pickle.dump(le_state, open("le_state.pkl", "wb"))
+pickle.dump(le_district, open("le_district.pkl", "wb"))
 
-print("✅ Model trained successfully")
-print("📦 Model saved as model.pkl")
+print("✅ Model and encoders trained successfully")
+print("📦 Model saved as model.pkl, Encoders as le_state.pkl/le_district.pkl")

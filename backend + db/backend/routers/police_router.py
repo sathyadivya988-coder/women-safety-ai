@@ -4,26 +4,32 @@ from database import get_db
 from models.sos_alert import SOSAlert
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/police", tags=["Police Dashboard"])
+router = APIRouter(tags=["Police Dashboard"])
 
 class DispatchRequest(BaseModel):
     alert_id: int
 
+from models.user import User
+
 @router.get("/alerts")
 def get_active_alerts(db: Session = Depends(get_db)):
     """
-    Returns all currently active SOS alerts.
+    Returns all currently active SOS alerts with user info.
     """
-    alerts = db.query(SOSAlert).filter(SOSAlert.status == "active").order_by(SOSAlert.created_at.desc()).all()
-    # In a real app we'd serialize this better (Pydantic models)
+    results = db.query(SOSAlert, User).join(User, SOSAlert.user_id == User.id).filter(SOSAlert.status == "active").order_by(SOSAlert.created_at.desc()).all()
+    
     return [{
         "id": a.id,
         "user_id": a.user_id,
+        "user_name": u.name,
+        "user_phone": u.phone,
+        "emergency_contact": u.emergency_contact,
         "latitude": a.latitude,
         "longitude": a.longitude,
+        "risk_score": a.risk_score,
         "status": a.status,
         "created_at": a.created_at
-    } for a in alerts]
+    } for a, u in results]
 
 @router.post("/dispatch")
 def dispatch_police(request: DispatchRequest, db: Session = Depends(get_db)):
